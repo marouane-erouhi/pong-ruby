@@ -2,7 +2,7 @@ require 'gosu'
 
 $width = 640
 $height = 480
-DIFFICULTY_SCALE = 0.0
+DIFFICULTY_SCALE = 0.2
 class Player
     attr_accessor :x, :y, :w, :h,:score,:velocity
     def initialize(x, y, vel=5.0)
@@ -72,12 +72,10 @@ class MyWindow < Gosu::Window
             @p1.score+=1
             reset_ball
         end
-        puts @p1.velocity.to_s 
 
         if coll(@p1)
             puts "p1"
         end
-
         if coll(@p2)
             puts "p2"
         end
