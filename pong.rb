@@ -5,17 +5,18 @@ $height = 480
 DIFFICULTY_SCALE = 0.2
 class Player
     attr_accessor :x, :y, :w, :h,:score,:velocity
-    def initialize(x, y, vel=5.0)
+    def initialize(x, y, vel=5.0, col)
         @x = x
         @y = y
         @velocity = vel
         @w = 10
         @h = 100
         @score=0
+        @color = col
     end
 
-    def draw()
-        draw_rect(@x, @y, 20, 100, Gosu::Color::BLUE)
+    def draw(gosu)
+        gosu.draw_rect(@x, @y, 20, 100, @color)
     end
 end
 
@@ -32,6 +33,9 @@ class Ball
         @x+=@velx
         @y+=@vely
     end
+    def draw(gosu)
+        gosu.draw_rect(@x, @y, @w, @w, Gosu::Color::WHITE)
+    end
 end
 
 
@@ -39,19 +43,15 @@ class MyWindow < Gosu::Window
     def initialize
         super($width, $height)
         self.caption = 'Pong in 2 hours'
-        @p1 = Player.new($width-40, $height/2)
-        @p2 = Player.new(40, $height/2)
+        @p1 = Player.new($width-40, $height/2, 5.0, Gosu::Color::BLUE)
+        @p2 = Player.new(40, $height/2, 5.0, Gosu::Color::RED)
         @velocity = 5.0
         @ball = Ball.new($width/2, $height/2, 10, 3.0)
         @speed = 0.0
     end
 
     def update
-        p1_move_up if Gosu.button_down? Gosu::KB_UP
-        p1_move_down if Gosu.button_down? Gosu::KB_DOWN
-
-        p2_move_up if Gosu.button_down? Gosu::KB_W
-        p2_move_down if Gosu.button_down? Gosu::KB_S
+        input()
 
 
         # collision up and down wall
@@ -83,10 +83,9 @@ class MyWindow < Gosu::Window
         @ball.update
     end
     def draw
-        draw_player(@p1, Gosu::Color::BLUE)
-        draw_player(@p2, Gosu::Color::RED)
-
-        draw_rect(@ball.x, @ball.y, @ball.w, @ball.w, Gosu::Color::WHITE)
+        @p1.draw(Gosu)
+        @p2.draw(Gosu)
+        @ball.draw(Gosu)
 
         #  draw scores
         Gosu::Image.from_text(self, 'Score '+@p2.score.to_s, Gosu.default_font_name, 20).draw(20, 20, 0)
@@ -96,8 +95,15 @@ class MyWindow < Gosu::Window
         Gosu::Image.from_text(self, @speed.to_s, Gosu.default_font_name, 20).draw($width/2-20, 40, 0)
     end
 
+    def input
+        p1_move_up if Gosu.button_down? Gosu::KB_UP
+        p1_move_down if Gosu.button_down? Gosu::KB_DOWN
+
+        p2_move_up if Gosu.button_down? Gosu::KB_W
+        p2_move_down if Gosu.button_down? Gosu::KB_S
+    end
     def coll(player)
-        if @ball.x >= player.x && @ball.x <= player.x+player.w && @ball.y >= player.y && @ball.y <= player.y+player.h
+        if @ball.x+@ball.w >= player.x && @ball.x <= player.x+player.w && @ball.y+@ball.w >= player.y && @ball.y <= player.y+player.h
             puts "Bounce"
             @ball.velx *= -1
             return true
@@ -116,7 +122,6 @@ class MyWindow < Gosu::Window
         else
             @ball.velx -= @speed
         end
-        puts @ball.velx
     end
     
     def p1_move_up
@@ -132,9 +137,7 @@ class MyWindow < Gosu::Window
     def p2_move_down
         @p2.y += @velocity
     end
-
-
-
+    
 
     def draw_player(player, color)
         draw_rect(player.x, player.y, player.w, player.h, color)
